@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang = "en">
+    <head>
+        <meta charset="utf-8">
+        <title>4166 Project</title>
+        <!-- Bootstrap -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <!-- Bootstrap theme -->
+        <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="css/jquery-ui.min.css">
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+
+    </head>
+    <body>
+        <!-- navbar -->
+        <div class="navbar navbar-default" role="navigation">
+            <div class="container-fluid">
+              <div class="navbar-header">
+                <a class="navbar-brand" href="#">Project </a>
+              </div>
+              <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                  <li id="HexButton"><a onclick="drawHex();" href="javascript:void(0);">Gird</a></li>
+                  <li id="HigButton"><a onclick="drawHeight();" href="javascript:void(0);">Height</a></li>
+                </ul>
+              </div><!--/.nav-collapse -->
+            </div><!--/.container-fluid -->
+        </div>
+        <div id="chart"></div>
+        <div id="control"></div>
+
+        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+        <script src="js/jquery-1.11.0.min.js"></script>  
+        <script src="js/jquery-ui.js"></script>
+        <!-- Include all compiled plugins (below), or include individual files as needed -->
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/d3.v3.js" charset="utf-8"></script>
+        <script src="js/chart.js" charset="utf-8"></script>
+        <script type="text/javascript">
+            var width = 700;
+            function drawHex(){
+                $(".active").removeClass("active");
+                $("#HexButton").addClass("active")
+                $("#chart").empty();
+                $("#control").empty();
+                d3.json("data.php?hex", function(error, json){
+                    var data = json.data;
+
+                    var zoomed = 0;
+
+                    var height = 700;
+
+                    var chart_width = width;
+                    var chart_height = height;  
+
+                    var chartsvg = d3.select("#chart").append("svg")
+                        .attr("width", width)
+                        .attr("height", height);
+
+                    xMin = d3.min( data, function(d) { return d.x; } );
+                    xMax = d3.max( data, function(d) { return d.x; } );
+                    yMin = d3.min( data, function(d) { return d.y; } );
+                    yMax = d3.max( data, function(d) { return d.y; } );
+
+                    console.log(xMin + "," + xMax + "," + yMin + "," + yMax)
+
+                    //call drawBarChart function to draw the chart
+                    chart = drawHexGrid(chartsvg, chart_height, chart_width, data)
+
+                    chartsvg.on("click", function(d) { 
+                        console.log(d3.mouse(this));
+                        x = (80 * (d3.mouse(this)[0] / width)) - 40
+                        y = (80 * (d3.mouse(this)[1] / height)) - 40
+                        console.log(x + " " + y);
+                        if(zoomed){
+                            zoomed = 0;
+                            chart.remove();
+                            chart = drawHexGrid(chartsvg, chart_height, chart_width, data)
+                        } else {
+                            d3.json("data.php?hex&x="+x+"&y="+y, function(error, json){
+                                subdata = json.data;
+
+                                zoomed = 1;
+                                chart.remove();
+                                chart = drawHexGrid(chartsvg, chart_height, chart_width, subdata)
+                            })
+                        }
+                        
+                    })
+
+                    console.log("Hex chart process time: " + json.process + " ms");
+
+
+
+                });
+
+            }
+
+            function drawHeight(){
+                $(".active").removeClass("active");
+                $("#HigButton").addClass("active")
+                $("#chart").empty();
+                $("#control").empty();
+                d3.json("data.php?height", function(error, json){
+                    var data = json.data;
+
+                    //the total height of the first chart, including titles/ margin spaces
+                    var height = 700;
+                    //the size of chart size only
+                    var chart_width = width;
+                    var chart_height = height;    
+
+                    //append svg for drawing
+                    var chartsvg = d3.select("#chart").append("svg")
+                        .attr("width", width)
+                        .attr("height", height);
+
+                    //call drawBarChart function to draw the chart
+                    chart = drawHeightChart(chartsvg, chart_height, chart_width, data)
+                    //chart = drawAreaChart(chartsvg, chart_width, chart_height, data)
+
+                    console.log("Height chart process time: " + json.process + " ms");
+      
+                });
+            }
+            
+            
+        </script>
+    </body>
+</html>
